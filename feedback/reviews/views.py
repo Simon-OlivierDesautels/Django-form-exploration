@@ -1,54 +1,59 @@
-from django.http import HttpResponseRedirect
-from django.shortcuts import render
-from django.views import View
+from django.views.generic.base import TemplateView
+from django.views.generic import ListView, DetailView
+from django.views.generic.edit import FormView, CreateView
 
 from .forms import ReviewForm
-# from .models import Review
+from .models import Review
 
 
-class ReviewView(View):
-    def get(self, request):
-        form = ReviewForm()
+class ReviewView(CreateView):
+    model = Review
+    # **This removes the need of the Review form class but gives you less control
+    # fields = ["full_name","review_text","rating"]
+    form_class = ReviewForm
+    template_name = 'reviews/review.html'
+    success_url = '/thank-you'
 
-        return render(request, "reviews/review.html", {
-            "form": form
-        })
+    # def form_valid(self, form):
+    #     form.save()
+    #     return super().form_valid(form)
+    
+    
+    # def post(self, request):
+    #     form = ReviewForm(request.POST)
 
-    def post(self, request):
-        form = ReviewForm(request.POST)
+    #     if form.is_valid():
+    #         form.save()
+    #         return HttpResponseRedirect("/thank-you")
 
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect("/thank-you")
-
-        return render(request, "reviews/review.html", {
-            "form": form
-        })
-
-
-# def review(request):
-#     if request.method == "POST":
-#         # existing_data = Review.objects.get(pk=1)
-#         form = ReviewForm(request.POST)
-#         # form = ReviewForm(request.POST, instance=existing_data)
-
-#         if form.is_valid():
-#             # **Because model is connected
-#             form.save()
-
-#             # review = Review(
-#             #     full_name=form.cleaned_data["full_name"],
-#             #     review_text=form.cleaned_data["review_text"],
-#             #     rating=form.cleaned_data["rating"])
-#             # review.save()
-#             return HttpResponseRedirect("/thank-you")
-#     else:
-#         form = ReviewForm()
-
-#     return render(request, "reviews/review.html", {
-#         "form": form
-#     })
+    #     return render(request, "reviews/review.html", {
+    #         "form": form
+    #     })
 
 
-def thank_you(request):
-    return render(request, "reviews/thank_you.html")
+class ThankYouView(TemplateView):
+    template_name = "reviews/thank_you.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["message"] = "Very nice"
+        return context
+
+
+class ReviewsListView(ListView):
+    template_name = "reviews/review_list.html"
+    model = Review
+    context_object_name = "reviews"
+
+    # **Will return all items that have a rating greater than 4
+    # def get_queryset(self):
+    #     base_query =  super().get_queryset()
+    #     data = base_query.filter(rating__gt=4)
+    #     return data
+    
+
+class ReviewDetailView(DetailView):
+    template_name = "reviews/review_detail.html"
+    model = Review
+    context_object_name = "review"
+
